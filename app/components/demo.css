@@ -1,5 +1,11 @@
+.grid-stack-item-content {
+  background-color: #F8F8F8;  /* Light gray background */
+  border-radius: 8px;         /* Rounded corners */
+  border: 1px solid #e0e0e0; /* Light border color */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth transition for scaling and shadow */
+}
 
-.grid-stack-item-content{
-  background-color: rgba(0, 0, 0, 0.125);
-  
+.grid-stack-item-content:hover {
+  transform: scale(1.01); /* Slightly scales the item when hovered */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft drop shadow */
 }

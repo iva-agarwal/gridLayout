@@ -4,7 +4,7 @@ import {GridstackDemo} from './components/demo'
 export default function HomePage() {
   
   return (
-    <main>
+    <main className='h-screen'>
       <GridstackDemo />
     </main>
   );

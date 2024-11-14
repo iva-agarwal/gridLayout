@@ -8,6 +8,8 @@ import {
   GridstackGrid,
   GridstackItemComponent,
 } from "./";
+import Chart2 from "./Chart2";
+import Chart from "./Chart";
 
 export const GridstackDemo = () => {
   return (
@@ -24,10 +26,10 @@ const GridDemo = () => {
     cellHeight: 80,
     float: true,
     margin: 5,
-    draggable: { handle: '.grid-stack-item-content' },
-    resizable: { handles: 'se' },
+    draggable: { handle: ".grid-stack-item-content" },
+    resizable: { handles: "se" },
     columnOpts: {
-      layout: 'compact',
+      layout: "compact",
       breakpointForWindow: true,
       breakpoints: [
         { w: 700, c: 1 },
@@ -40,24 +42,39 @@ const GridDemo = () => {
 
   return (
     <GridstackGrid options={gridOptions}>
-      <GridstackItemComponent id="item1" initOptions={{ x: 0, y: 0, w: 2, h: 2 }}>
-        <div >Item 1</div>
+      <GridstackItemComponent
+        id="item1"
+        initOptions={{ x: 0, y: 0, w: 4, h: 4 }}
+      >
+        <Chart />
       </GridstackItemComponent>
 
-      <GridstackItemComponent id="item2" initOptions={{ x: 4, y: 0, w: 5, h: 2 }}>
-        <div>Item 2</div>
+      <GridstackItemComponent
+        id="item2"
+        initOptions={{ x: 4, y: 0, w: 8, h: 5 }}
+      >
+        <Chart2 />
       </GridstackItemComponent>
 
-      <GridstackItemComponent id="item3" initOptions={{ x: 4, y: 5, w: 2, h: 2 }}>
-        <div>Item 3</div>
+      <GridstackItemComponent
+        id="item3"
+        initOptions={{ x: 0, y: 4, w: 4, h: 6 }}
+      >
+        <Chart2 />{" "}
       </GridstackItemComponent>
 
-      <GridstackItemComponent id="item4" initOptions={{ x: 6, y: 3, w: 2, h: 2 }}>
-        <div>Item 4</div>
+      <GridstackItemComponent
+        id="item4"
+        initOptions={{ x: 4, y: 5, w: 4, h: 5 }}
+      >
+        <Chart />
       </GridstackItemComponent>
 
-      <GridstackItemComponent id="item5" initOptions={{ x: 8, y: 10, w: 2, h: 2 }}>
-        <div>Item 5</div>
+      <GridstackItemComponent
+        id="item5"
+        initOptions={{ x: 8, y: 5, w: 4, h: 5 }}
+      >
+        <Chart />
       </GridstackItemComponent>
     </GridstackGrid>
   );
