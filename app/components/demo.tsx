@@ -9,8 +9,8 @@ import {
   GridstackItemComponent,
 } from "./";
 import Chart from "./Chart";
-import { doc, getDoc, DocumentData } from "firebase/firestore";
-import { db } from "../firebaseConfig"; 
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
 interface ChartConfig {
   series: Array<{
@@ -39,8 +39,8 @@ interface Coordinates {
 }
 
 interface FirestoreData {
-  componentData: ChartConfig[];
-  coordinates: Coordinates[];
+  componentData: ChartConfig;
+  coordinates: Coordinates;
 }
 
 export const GridstackDemo = () => {
@@ -53,28 +53,24 @@ export const GridstackDemo = () => {
 
 const GridDemo = () => {
   const { grid, getItemRefFromListById } = useGridstackContext();
-  const [data, setData] = useState<FirestoreData | null>(null);
+  const [data, setData] = useState<FirestoreData[] | null>(null);
 
-  // Function to fetch a document by its ID
   const fetchData = async () => {
     try {
       const docRef = doc(db, "components", "charts");
       const docSnap = await getDoc(docRef);
-
+  
       if (docSnap.exists()) {
-        const documentData = docSnap.data();
-        const structuredData: FirestoreData = {
-          componentData: documentData.components.componentData,
-          coordinates: documentData.components.coordinates,
-        };
-        setData(structuredData); 
-      } else {
-        console.log("No such document!");
+        const documentData = docSnap.data();  
+        if (documentData) {
+          setData(documentData.data as FirestoreData[]);
+        } 
       }
     } catch (error) {
       console.error("Error getting document:", error);
     }
   };
+  
 
   useEffect(() => {
     fetchData();
@@ -102,14 +98,13 @@ const GridDemo = () => {
     <>
       {data ? (
         <GridstackGrid options={gridOptions}>
-          {/* Map over the componentData array and render each chart */}
-          {data.componentData.map((chartConfig, index) => (
+          {data.map((item, index) => (
             <GridstackItemComponent
               key={index}
               id={`item-${index}`}
-              initOptions={data.coordinates[index]} 
+              initOptions={item.coordinates} 
             >
-              <Chart config={chartConfig} />
+              <Chart config={item.componentData} /> 
             </GridstackItemComponent>
           ))}
         </GridstackGrid>
@@ -118,5 +113,4 @@ const GridDemo = () => {
       )}
     </>
   );
-  
 };
