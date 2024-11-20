@@ -1,6 +1,6 @@
-"use client"; // demo.tsx
+'use client'
 import type { GridStackOptions } from "gridstack";
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import "./demo.css";
 import {
   useGridstackContext,
@@ -8,8 +8,40 @@ import {
   GridstackGrid,
   GridstackItemComponent,
 } from "./";
-import Chart2 from "./Chart2";
 import Chart from "./Chart";
+import { doc, getDoc, DocumentData } from "firebase/firestore";
+import { db } from "../firebaseConfig"; 
+
+interface ChartConfig {
+  series: Array<{
+    type: string;
+    smooth: boolean;
+    name: string;
+    data: number[];
+  }>;
+  xAxis: {
+    data: string[];
+    type: string;
+  };
+  yAxis: {
+    type: string;
+  };
+  tooltip: {
+    trigger: string;
+  };
+}
+
+interface Coordinates {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+interface FirestoreData {
+  componentData: ChartConfig[];
+  coordinates: Coordinates[];
+}
 
 export const GridstackDemo = () => {
   return (
@@ -21,6 +53,32 @@ export const GridstackDemo = () => {
 
 const GridDemo = () => {
   const { grid, getItemRefFromListById } = useGridstackContext();
+  const [data, setData] = useState<FirestoreData | null>(null);
+
+  // Function to fetch a document by its ID
+  const fetchData = async () => {
+    try {
+      const docRef = doc(db, "components", "charts");
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const documentData = docSnap.data();
+        const structuredData: FirestoreData = {
+          componentData: documentData.components.componentData,
+          coordinates: documentData.components.coordinates,
+        };
+        setData(structuredData); 
+      } else {
+        console.log("No such document!");
+      }
+    } catch (error) {
+      console.error("Error getting document:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []); 
 
   const gridOptions: GridStackOptions = {
     cellHeight: 80,
@@ -41,41 +99,24 @@ const GridDemo = () => {
   };
 
   return (
-    <GridstackGrid options={gridOptions}>
-      <GridstackItemComponent
-        id="item1"
-        initOptions={{ x: 0, y: 0, w: 4, h: 4 }}
-      >
-        <Chart />
-      </GridstackItemComponent>
-
-      <GridstackItemComponent
-        id="item2"
-        initOptions={{ x: 4, y: 0, w: 8, h: 5 }}
-      >
-        <Chart2 />
-      </GridstackItemComponent>
-
-      <GridstackItemComponent
-        id="item3"
-        initOptions={{ x: 0, y: 4, w: 4, h: 6 }}
-      >
-        <Chart2 />{" "}
-      </GridstackItemComponent>
-
-      <GridstackItemComponent
-        id="item4"
-        initOptions={{ x: 4, y: 5, w: 4, h: 5 }}
-      >
-        <Chart />
-      </GridstackItemComponent>
-
-      <GridstackItemComponent
-        id="item5"
-        initOptions={{ x: 8, y: 5, w: 4, h: 5 }}
-      >
-        <Chart />
-      </GridstackItemComponent>
-    </GridstackGrid>
+    <>
+      {data ? (
+        <GridstackGrid options={gridOptions}>
+          {/* Map over the componentData array and render each chart */}
+          {data.componentData.map((chartConfig, index) => (
+            <GridstackItemComponent
+              key={index}
+              id={`item-${index}`}
+              initOptions={data.coordinates[index]} 
+            >
+              <Chart config={chartConfig} />
+            </GridstackItemComponent>
+          ))}
+        </GridstackGrid>
+      ) : (
+        <div>Loading...</div>
+      )}
+    </>
   );
+  
 };
