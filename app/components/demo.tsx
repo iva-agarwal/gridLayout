@@ -13,7 +13,6 @@ import type { GridStackOptions } from "gridstack";
 import "./demo.css";
 import { FirestoreData } from "../types";
 import { Smartphone, Monitor, Edit3 } from "lucide-react";
-import Frame from 'react-frame-component';
 
 export const GridstackDemo = () => {
   return (
@@ -131,42 +130,45 @@ const GridDemo = () => {
   return (
     <div>
 
-      <div className="flex items-center justify-between gap-4 mb-5 p-5 ">
-        <button
-          onClick={isEditMode ? saveChanges : () => setIsEditMode(true)}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300 focus:outline-none flex items-center gap-2"
-        >
-          {isEditMode ? <></> : <Edit3 className="w-5 h-5" />}
-          {isEditMode ? "Save Changes" : ""}
-        </button>
+<div className="flex items-center justify-between gap-4 mb-5 p-5">
+  <button
+    onClick={isEditMode ? saveChanges : () => setIsEditMode(true)}
+    className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300 focus:outline-none flex items-center gap-2"
+  >
+    {isEditMode ? "Save Changes" : <>
+      <Edit3 className="w-5 h-5" /> Edit Mode
+    </>}
+  </button>
 
-        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => handleViewModeChange('desktop')}
-            className={`p-2 rounded-lg transition-colors duration-300 ${
-              viewMode === 'desktop'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <Monitor className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleViewModeChange('mobile')}
-            className={`p-2 rounded-lg transition-colors duration-300 ${
-              viewMode === 'mobile'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <Smartphone className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      
+  {isEditMode && ( // Render view mode buttons only in edit mode
+    <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+      <button
+        onClick={() => handleViewModeChange('desktop')}
+        className={`p-2 rounded-lg transition-colors duration-300 ${
+          viewMode === 'desktop'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:bg-gray-200'
+        }`}
+      >
+        <Monitor className="w-5 h-5" />
+      </button>
+      <button
+        onClick={() => handleViewModeChange('mobile')}
+        className={`p-2 rounded-lg transition-colors duration-300 ${
+          viewMode === 'mobile'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:bg-gray-200'
+        }`}
+      >
+        <Smartphone className="w-5 h-5" />
+      </button>
+    </div>
+  )}
+</div>
+
       <div
         className={`
-          ${viewMode === 'mobile' ? 'max-w-[375px] mx-auto border-4 border-gray-300 rounded-xl shadow-lg overflow-y-scroll bg-white' : ''}
+          ${viewMode === 'mobile' ? 'max-w-[375px] mx-auto  rounded-xl shadow-lg overflow-y-scroll bg-white' : ''}
         `}
         style={{
           height: viewMode === 'mobile' ? '' : 'auto', // Optionally mimic mobile viewport height
