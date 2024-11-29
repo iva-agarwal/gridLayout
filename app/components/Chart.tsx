@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts';
+import ReactECharts, { EChartsInstance } from 'echarts-for-react';
 
 interface ChartProps {
   config: {
@@ -24,25 +23,27 @@ interface ChartProps {
 }
 
 const Chart: React.FC<ChartProps> = ({ config }) => {
-  const chartRef = useRef<any>(null);
+  const chartRef = useRef<ReactECharts | null>(null); // Typed reference for ReactECharts
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Function to resize chart
   const resizeChart = () => {
     if (chartRef.current) {
-      chartRef.current.getEchartsInstance().resize();
+      const echartsInstance: EChartsInstance = chartRef.current.getEchartsInstance();
+      echartsInstance.resize();
     }
   };
 
   useEffect(() => {
-    const observer = new ResizeObserver(resizeChart);
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
+    const container = containerRef.current; // Store ref value in variable
+    const observer = new ResizeObserver(() => resizeChart());
+    if (container) {
+      observer.observe(container);
     }
 
     return () => {
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
+      if (container) {
+        observer.unobserve(container);
       }
       observer.disconnect();
     };

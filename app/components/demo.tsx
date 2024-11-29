@@ -11,7 +11,9 @@ import {
 import Chart from "./Chart";
 import type { GridStackOptions } from "gridstack";
 import "./demo.css";
-import { FirestoreData } from "../types"; 
+import { FirestoreData } from "../types";
+import { Smartphone, Monitor, Edit3 } from "lucide-react";
+import Frame from 'react-frame-component';
 
 export const GridstackDemo = () => {
   return (
@@ -25,112 +27,180 @@ const GridDemo = () => {
   const { grid } = useGridstackContext();
   const [data, setData] = useState<FirestoreData[] | null>(null);
   const [modifiedData, setModifiedData] = useState<FirestoreData[] | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const isMobileScreen = window.innerWidth <= 768; 
+    setViewMode(isMobileScreen ? 'mobile' : 'desktop');
+  }, []);
+  
 
   const fetchData = async () => {
+    setIsLoading(true);
     try {
       const docRef = doc(db, "components", "charts");
       const docSnap = await getDoc(docRef);
-
+      
       if (docSnap.exists()) {
         const documentData = docSnap.data();
         if (documentData) {
-          setData(documentData.data as FirestoreData[]);
-          setModifiedData(documentData.data as FirestoreData[]); // To track updates
+          const processedData = (documentData.data as FirestoreData[]).map(item => ({
+            ...item,
+            coordinates: {
+              desktop: item.coordinates.desktop || item.coordinates,
+              mobile: item.coordinates.mobile || { x: 0, y: 0, w: 6, h: 4 }
+            }
+          }));
+
+          setData(processedData);
+          setModifiedData(processedData);
         }
       }
     } catch (error) {
       console.error("Error getting document:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Save updated coordinates to Firestore
-const saveChanges = async () => {
-  if (modifiedData) {
-    try {
-      const docRef = doc(db, "components", "charts");
+  const saveChanges = async () => {
+    if (modifiedData) {
+      try {
+        const docRef = doc(db, "components", "charts");
+        
+        const jsonData = modifiedData.map(item => ({
+          ...item,
+          coordinates: {
+            desktop: {
+              x: item.coordinates.desktop.x,
+              y: item.coordinates.desktop.y,
+              w: item.coordinates.desktop.w,
+              h: item.coordinates.desktop.h,
+            },
+            mobile: {
+              x: item.coordinates.mobile.x,
+              y: item.coordinates.mobile.y,
+              w: item.coordinates.mobile.w,
+              h: item.coordinates.mobile.h,
+            }
+          },
+        }));
 
-      const jsonData = modifiedData.map(item => ({
-        ...item, // Keep the rest of the item data
-        coordinates: { 
-          x: item.coordinates.x,
-          y: item.coordinates.y,
-          w: item.coordinates.w,
-          h: item.coordinates.h
-        },
-      }));
-
-      // Save only the necessary data to Firestore
-      await updateDoc(docRef, { data: jsonData });
-      alert("Changes saved ");
-    } catch (error) {
-      console.error("Error saving changes:", error);
+        await updateDoc(docRef, { data: jsonData });
+        alert("Changes saved");
+        setIsEditMode(false); // Exit edit mode after saving
+      } catch (error) {
+        console.error("Error saving changes:", error);
+      }
     }
-  }
-};
+  };
 
-  // Track resize events
+  // Refetch data when view mode changes
+  useEffect(() => {
+    fetchData();
+  }, [viewMode]);
+
+  // Enable/disable grid editing
   useEffect(() => {
     if (grid) {
-      grid.on("resizestop", (event, element) => {
-        const itemId = element.getAttribute("data-gs-id");
-        if (itemId && modifiedData) {
-          const index = parseInt(itemId.replace("item-", ""));
-          const item = modifiedData[index];
-          if (item) {
-            const node = element.gridstackNode;
-            if (node) {
-              item.coordinates = {
-                x: node.x ?? 0, 
-                y: node.y ?? 0, 
-                w: node.w ?? 1,
-                h: node.h ?? 1, 
-              };
-              setModifiedData([...modifiedData]); // Trigger re-render
-            }
-          }
-        }
-      });
+      grid.enableMove(isEditMode);
+      grid.enableResize(isEditMode);
     }
-  }, [grid, modifiedData]);
-  
+  }, [grid, isEditMode]);
+
+  // Fetch data on component mount
   useEffect(() => {
     fetchData();
   }, []);
 
   const gridOptions: GridStackOptions = {
-    cellHeight: 80,
+    cellHeight: viewMode === 'mobile' ? 60 : 80,
     float: true,
     margin: 5,
     draggable: { handle: ".grid-stack-item-content" },
-    resizable: { handles: "se" },
+    resizable: { handles: "se" }
+  };
+
+  // Handle view mode change
+  const handleViewModeChange = (mode: 'desktop' | 'mobile') => {
+    setViewMode(mode);
   };
 
   return (
-    <>
-      {data ? (
-        <>
-         <button
-  onClick={saveChanges}
-  className="m-5 px-6 py-3 bg-blue-800 text-white rounded-lg shadow-md hover:bg-blue-900  transition-colors duration-300 focus:outline-none "
->
-  Save Changes
-</button>
+    <div>
 
-          <GridstackGrid options={gridOptions}>
-            {data.map((item, index) => (
-              <GridstackItemComponent
-                key={index}
-                id={`item-${index}`}
-                initOptions={item.coordinates}
-              >
-                <Chart config={item.componentData} />
-              </GridstackItemComponent>
-            ))}
-          </GridstackGrid>
-        </>
-      ) : (
-        <div>Loading...</div>
-      )}
-    </>
+      <div className="flex items-center justify-between gap-4 mb-5 p-5 ">
+        <button
+          onClick={isEditMode ? saveChanges : () => setIsEditMode(true)}
+          className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300 focus:outline-none flex items-center gap-2"
+        >
+          {isEditMode ? <></> : <Edit3 className="w-5 h-5" />}
+          {isEditMode ? "Save Changes" : ""}
+        </button>
+
+        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => handleViewModeChange('desktop')}
+            className={`p-2 rounded-lg transition-colors duration-300 ${
+              viewMode === 'desktop'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <Monitor className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => handleViewModeChange('mobile')}
+            className={`p-2 rounded-lg transition-colors duration-300 ${
+              viewMode === 'mobile'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <Smartphone className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      
+      <div
+        className={`
+          ${viewMode === 'mobile' ? 'max-w-[375px] mx-auto border-4 border-gray-300 rounded-xl shadow-lg overflow-y-scroll bg-white' : ''}
+        `}
+        style={{
+          height: viewMode === 'mobile' ? '' : 'auto', // Optionally mimic mobile viewport height
+        }}
+      >
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <span className="loading-spinner">Loading...</span>
+          </div>
+        ) : data ? (
+         
+          <div>
+            <GridstackGrid options={gridOptions}>
+              {data.map((item, index) => (
+                <GridstackItemComponent
+                  key={`${viewMode}-${index}`}
+                  id={`item-${index}`}
+                  initOptions={
+                    viewMode === 'mobile'
+                      ? item.coordinates.mobile
+                      : item.coordinates.desktop
+                  }
+                >
+                  <Chart config={item.componentData} />
+                </GridstackItemComponent>
+              ))}
+            </GridstackGrid>
+          </div>
+        ) : (
+          <div>No data available</div>
+        )}
+      </div>
+    </div>
   );
 };
+
+export default GridDemo;

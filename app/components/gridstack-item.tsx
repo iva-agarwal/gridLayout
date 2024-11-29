@@ -35,7 +35,6 @@ export const GridstackItemComponent = ({
   initOptions,
   id,
   children,
-  className,
 }: GridstackItemComponentProps) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const optionsRef = React.useRef<GridStackWidget | undefined>(initOptions);

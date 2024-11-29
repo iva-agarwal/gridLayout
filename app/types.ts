@@ -20,10 +20,18 @@ export interface ChartConfig {
   }
   
   export interface Coordinates {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
+    desktop: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    };
+    mobile: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    };
   }
   
   export interface FirestoreData {
