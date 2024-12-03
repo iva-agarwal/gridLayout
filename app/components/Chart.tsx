@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactECharts, { EChartsInstance } from 'echarts-for-react';
 
 interface ChartProps {
@@ -23,43 +23,46 @@ interface ChartProps {
 }
 
 const Chart: React.FC<ChartProps> = ({ config }) => {
-  const chartRef = useRef<ReactECharts | null>(null); // Typed reference for ReactECharts
+  const chartRef = useRef<ReactECharts | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Function to resize chart
-  const resizeChart = () => {
-    if (chartRef.current) {
-      const echartsInstance: EChartsInstance = chartRef.current.getEchartsInstance();
-      echartsInstance.resize();
-    }
-  };
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const container = containerRef.current; // Store ref value in variable
-    const observer = new ResizeObserver(() => resizeChart());
+    const container = containerRef.current;
     if (container) {
+      const observer = new ResizeObserver(() => {
+        const { clientWidth, clientHeight } = container;
+        if (clientWidth > 0 && clientHeight > 0) {
+          setIsReady(true);
+        }
+        if (chartRef.current) {
+          const echartsInstance: EChartsInstance = chartRef.current.getEchartsInstance();
+          echartsInstance.resize();
+        }
+      });
       observer.observe(container);
-    }
 
-    return () => {
-      if (container) {
-        observer.unobserve(container);
-      }
-      observer.disconnect();
-    };
+      return () => {
+        observer.disconnect();
+      };
+    }
   }, []);
 
   return (
     <div ref={containerRef} style={{ height: '100%', width: '100%' }}>
-      <ReactECharts
-        ref={chartRef}
-        option={config}  
-        notMerge={true}
-        lazyUpdate={true}
-        style={{ height: '100%', width: '100%' }}
-      />
+      {isReady && (
+        <ReactECharts
+          ref={chartRef}
+          option={config}
+          notMerge={true}
+          lazyUpdate={true}
+          style={{ height: '100%', width: '100%' }}
+        />
+      )}
     </div>
   );
 };
+
 
 export default Chart;

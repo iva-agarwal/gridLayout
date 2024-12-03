@@ -1,4 +1,5 @@
-'use client'
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
@@ -29,12 +30,6 @@ const GridDemo = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const isMobileScreen = window.innerWidth <= 768; 
-    setViewMode(isMobileScreen ? 'mobile' : 'desktop');
-  }, []);
-  
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -89,14 +84,39 @@ const GridDemo = () => {
 
         await updateDoc(docRef, { data: jsonData });
         alert("Changes saved");
-        setIsEditMode(false); // Exit edit mode after saving
+        setIsEditMode(false); 
       } catch (error) {
         console.error("Error saving changes:", error);
       }
     }
   };
 
-  // Refetch data when view mode changes
+  useEffect(() => {
+    const debounce = (func: Function, wait: number) => {
+      let timeout: NodeJS.Timeout;
+      return (...args: any[]) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+      };
+    };
+
+    const handleResize = debounce(() => {
+      if (isEditMode) return; 
+      const isMobileScreen = window.innerWidth <= 768;
+      const newViewMode = isMobileScreen ? 'mobile' : 'desktop';
+
+      if (newViewMode !== viewMode) {
+        setViewMode(newViewMode);
+      }
+    }, 200);
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [viewMode]);
+
   useEffect(() => {
     fetchData();
   }, [viewMode]);
@@ -167,11 +187,12 @@ const GridDemo = () => {
 </div>
 
       <div
-        className={`
-          ${viewMode === 'mobile' ? 'max-w-[375px] mx-auto  rounded-xl shadow-lg overflow-y-scroll bg-white' : ''}
-        `}
+        className={`${
+          viewMode === 'mobile' ? 'mx-auto rounded-xl shadow-lg overflow-y-scroll bg-white' : ''
+        }`}
         style={{
-          height: viewMode === 'mobile' ? '' : 'auto', // Optionally mimic mobile viewport height
+          height: viewMode === 'mobile' ? '' : 'auto',
+          maxWidth: isEditMode && viewMode === 'mobile' ? '375px' : undefined,
         }}
       >
         {isLoading ? (
